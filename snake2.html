@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Skeletal Snake Monster Cursor</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden; background: #1e1e24;
+    cursor: none;
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W, H;
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  const segments = 25;
+  const snake = [];
+  for (let i = 0; i < segments; i++) {
+    snake.push({ x: W/2, y: H/2, angle: 0 });
+  }
+  const mouse = { x: W/2, y: H/2 };
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+  function drawSegment(x, y, angle, index) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(20, 0);
+    ctx.stroke();
+    for (let i = 3; i < 20; i += 4) {
+      const ribLength = 6;
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i - ribLength, -ribLength);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i - ribLength, ribLength);
+      ctx.stroke();
+    }
+    if (index % 2 === 0) {
+      ctx.beginPath();
+      ctx.moveTo(5, 0);
+      ctx.lineTo(10, -10);
+      ctx.lineTo(15, -5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(5, 0);
+      ctx.lineTo(10, 10);
+      ctx.lineTo(15, 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function update() {
+    const head = snake[0];
+    head.x = lerp(head.x, mouse.x, 0.15);
+    head.y = lerp(head.y, mouse.y, 0.15);
+    head.angle = Math.atan2(mouse.y - head.y, mouse.x - head.x);
+    for (let i = 1; i < segments; i++) {
+      const cur = snake[i];
+      const prev = snake[i - 1];
+      cur.x = lerp(cur.x, prev.x - 20 * Math.cos(prev.angle), 0.35);
+      cur.y = lerp(cur.y, prev.y - 20 * Math.sin(prev.angle), 0.35);
+      cur.angle = Math.atan2(prev.y - cur.y, prev.x - cur.x);
+    }
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = snake.length - 1; i >= 0; i--) {
+      drawSegment(snake[i].x, snake[i].y, snake[i].angle, i);
+    }
+  }
+
+  function loop() {
+    update();
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>
+

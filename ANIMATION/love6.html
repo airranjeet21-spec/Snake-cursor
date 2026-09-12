@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neon Love Heartbeat</title>
+  <style>
+    :root {
+      --bg-1:#1a1a1a;
+      --bg-2:#111213;
+      --neon-red: #ff0033;
+      --neon-cyan: #00f0ff;
+    }
+
+    * {margin:0;padding:0;box-sizing:border-box;}
+    html,body {height:100%;}
+    body {
+      background: linear-gradient(180deg,var(--bg-1),var(--bg-2));
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+      font-family: "Brush Script MT", cursive;
+    }
+
+    canvas {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    }
+
+    .container {
+      display:flex;
+      align-items:center;
+      position:relative;
+      z-index:10;
+    }
+
+    /* Heart */
+    .center-heart {
+      font-size:120px;
+      color: var(--neon-red);
+      text-shadow:
+        0 0 10px var(--neon-red),
+        0 0 25px rgba(255,0,51,0.7),
+        0 0 50px rgba(255,0,51,0.5);
+      animation: pulse 1.6s infinite ease-in-out;
+      margin-left:-35px;
+    }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1);}
+      50% { transform: scale(1.2);}
+    }
+
+    /* Line */
+    .line {
+      width:200px;
+      height:3px;
+      background: var(--neon-red);
+      box-shadow:0 0 10px var(--neon-red),
+                 0 0 20px var(--neon-red);
+      position: relative;
+    }
+
+    /* Arrow */
+    .line::after {
+      content:"";
+      position:absolute;
+      right:-12px;
+      top:-6px;
+      border-left:12px solid var(--neon-red);
+      border-top:6px solid transparent;
+      border-bottom:6px solid transparent;
+      filter: drop-shadow(0 0 6px var(--neon-red));
+    }
+
+    /* Text */
+    .text {
+      position:absolute;
+      left:-70px;
+      top:-40px;
+      font-size:40px;
+      color:#fff;
+      text-shadow:
+        0 0 5px var(--neon-cyan),
+        0 0 15px var(--neon-cyan),
+        0 0 30px var(--neon-cyan);
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas for heartbeat wave -->
+  <canvas id="splash"></canvas>
+
+  <!-- Neon Elements -->
+  <div class="container">
+    <div class="text">love</div>
+    <div class="line"></div>
+    <div class="center-heart">❤</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("splash");
+    const ctx = canvas.getContext("2d");
+
+    let W,H;
+    function resize(){
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // waves
+    let waves = [];
+
+    class Wave {
+      constructor(x,y){
+        this.x = x;
+        this.y = y;
+        this.life = 100; // frames
+        this.points = [];
+        for (let i=0;i<60;i++){
+          // ECG like pattern
+          let offset=0;
+          if(i===10) offset=-30;     // dip
+          if(i===20) offset=60;      // spike
+          if(i===25) offset=-40;     // down
+          if(i===30) offset=20;      // recovery
+          this.points.push({x:i*8, y:offset});
+        }
+      }
+      update(){
+        this.life--;
+      }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x,this.y);
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        for(let i=0;i<this.points.length;i++){
+          let p=this.points[i];
+          ctx.lineTo(p.x, p.y);
+        }
+        ctx.strokeStyle=`rgba(255,0,60,${this.life/100})`;
+        ctx.shadowColor="rgba(255,0,60,0.8)";
+        ctx.shadowBlur=15;
+        ctx.lineWidth=2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function spawnWave(){
+      let rect = document.querySelector(".center-heart").getBoundingClientRect();
+      let x = rect.left + rect.width/2;
+      let y = rect.top + rect.height/2;
+      waves.push(new Wave(x,y));
+    }
+
+    function animate(){
+      ctx.clearRect(0,0,W,H);
+      waves.forEach((w,i)=>{
+        w.update();
+        w.draw();
+        if(w.life<=0) waves.splice(i,1);
+      });
+      requestAnimationFrame(animate);
+    }
+
+    setInterval(spawnWave,700);
+    animate();
+  </script>
+</body>
+</html>
